@@ -1,0 +1,9 @@
+checkpoints/
+gpt2/
+dataset/
+__pycache__/
+*.py[cod]
+.DS_Store
+.vscode/
+*.bin
+*.pt

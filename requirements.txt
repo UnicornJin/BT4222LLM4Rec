@@ -1,0 +1,8 @@
+fsspec
+numpy
+scipy
+torch
+transformers
+wget
+accelerate
+pandas
