@@ -4,8 +4,9 @@ This repo contains the code for NUS BT4222 module topic:
 LLM for Recommendation System
 
 The code is modified from project `LLM4REC`
-https://github.com/anord-wang/LLM4REC
-https://arxiv.org/abs/2402.09617 
+[Code Repo](https://github.com/anord-wang/LLM4REC)
+
+[Paper](https://arxiv.org/abs/2402.09617)
 We strongly encourage you to take a look at their papers, for a rough understanding of the purpose of each stages.
 
 The system design is based on GPT2. There are three major scripts in this repo:
