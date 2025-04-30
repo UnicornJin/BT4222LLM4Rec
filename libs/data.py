@@ -7,6 +7,17 @@ from torch.utils.data import Dataset
 import scipy.io
 
 
+# ------------------------------------------------
+# This script is to show the data generator of 
+# BT4222 LLM for Recommendation Example Code
+# 
+# The script is based on project 
+# 'LLM4REC' https://github.com/anord-wang/LLM4REC
+#
+# Edition: 2025.05.01 by Jin Yuze
+# ------------------------------------------------
+
+
 class CollaborativeGPTGeneratorBatch(Dataset):
     """
     Dataset class for generating collaborative GPT input batches.
