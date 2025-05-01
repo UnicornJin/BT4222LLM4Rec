@@ -14,10 +14,10 @@ from accelerate import Accelerator
 
 from scipy.sparse import load_npz
 from torch.utils.data import DataLoader
-from transformers import GPT2Model, GPT2Config
-from transformers.models.gpt2 import GPT2ModelWithBC
+from transformers import GPT2Config
 
 sys.path.append("libs")
+from libs.modeling_gpt2 import GPT2ModelWithBC
 from libs.tokenizer import TokenizerWithUserItemIDTokensBatch
 from libs.data import UserItemContentGPTDatasetBatch
 from libs.data import RecommendationGPTTrainGeneratorBatch
@@ -50,7 +50,6 @@ meta_path = os.path.join(data_root, "meta.pkl")
 mapping_graph_bc_path = os.path.join(data_root, "interaction_matrix.npz")
 review_path = os.path.join(data_root, "user_item_texts", "review.pkl")
 filepath_list = [os.path.join(data_root, "user_item_texts", "review.pkl"),
-                    os.path.join(data_root, "user_item_texts", "explain.pkl"),
                     os.path.join(data_root, "item_texts", "title.pkl"),
                     os.path.join(data_root, "item_texts", "brand.pkl"),
                     os.path.join(data_root, "item_texts", "categories.pkl"),
@@ -378,8 +377,10 @@ def main():
             # Save user embeddings
             user_emb_path = os.path.join(collaborative_model_save_path, f"user_embeddings.pt")
             item_emb_path = os.path.join(collaborative_model_save_path, f"item_embeddings.pt")
+            gpt_save_path = os.path.join(content_based_model_save_path, f"collaborative_based_gpt2.bin")
             torch.save(accelerator.unwrap_model(collaborate_model).base_model.user_embeddings.state_dict(), user_emb_path)
             torch.save(accelerator.unwrap_model(collaborate_model).base_model.item_embeddings.state_dict(), item_emb_path)
+            torch.save(accelerator.unwrap_model(collaborate_model).base_model.gpt2model.state_dict(), gpt_save_path)
 
         accelerator.print(f"Best model saved to {collaborative_model_save_path}")
         accelerator.print(f"Train Rec Loss: {train_rec_loss:.4f}")
@@ -388,7 +389,7 @@ def main():
         accelerator.print(f"Cur Recall@40: {cur_recall_40:.4f} / Best Recall@40: {best_recall_40:.4f}")
         accelerator.print(f"Cur NDCG@100: {cur_NDCG_100:.4f} / Best NDCG@100: {best_NDCG_100:.4f}")    
 
-        if (epoch + 1) % 300 == 0:
+        if (epoch + 1) % 150 == 0:
             review_total_loss = 0
             regularize_total_loss = 0
 

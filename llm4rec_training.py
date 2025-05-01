@@ -12,10 +12,10 @@ import torch.optim as optim
 from accelerate import Accelerator
 from scipy.sparse import load_npz
 from torch.utils.data import DataLoader
-from libs.modeling_gpt2 import GPT2ModelWithBC
 from transformers import GPT2Config
 
 sys.path.append("libs")
+from libs.modeling_gpt2 import GPT2ModelWithBC
 from libs.tokenizer import TokenizerWithUserItemIDTokensBatch
 from libs.data import CollaborativeGPTGeneratorBatch
 from libs.data import UserItemContentGPTDatasetBatch
