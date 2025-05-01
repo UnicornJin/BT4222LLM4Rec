@@ -20,7 +20,6 @@ def Recall_at_k(y_true, y_pred, k, agg="sum"):
         raise NotImplementedError(f"aggregation method {agg} not defined!")
     return recall
 
-
 def NDCG_at_k(y_true, y_pred, k, agg="sum"):
     '''
         Average NDCG for top k recommended results. 

@@ -10,6 +10,9 @@ import scipy.io
 # ------------------------------------------------
 # This script is to show the data generator of 
 # BT4222 LLM for Recommendation Example Code
+#
+# This file contains the steps to convert data 
+# into GPT training format prompts 
 # 
 # The script is based on project 
 # 'LLM4REC' https://github.com/anord-wang/LLM4REC
@@ -17,10 +20,13 @@ import scipy.io
 # Edition: 2025.05.01 by Jin Yuze
 # ------------------------------------------------
 
-
+# Used in: Training
+# Target: Generate samples in the format: "<user_i> has interacted with <item_a> <item_b> ..."
+# Then model can first learn the user/item collaborative embedding, understanding the scenario.
 class CollaborativeGPTGeneratorBatch(Dataset):
     """
-    Dataset class for generating collaborative GPT input batches.
+    Dataset class for generating 
+    collaborative-based GPT model input batches.
 
     Args:
         tokenizer (TokenizerWithUserItemIDTokensBatch):
@@ -45,33 +51,32 @@ class CollaborativeGPTGeneratorBatch(Dataset):
         return self.num_users
 
     def __getitem__(self, idx):
+        
         # Tokenize the prompt
         prompt = f"user_{idx} has interacted with"
+
         return prompt, self.train_mat.getrow(idx).nonzero()[1]
 
     def get_bc_from_mapping(self, input_ids_1, input_ids_2, mapping_graph_bc):
         batch_size, seq_length_1 = input_ids_1.size()
         seq_length_2 = input_ids_2.size(1)
-        # print(batch_size, seq_length_1, seq_length_2)
 
-        # 创建一个大小为 [batch_size, seq_length_1, seq_length_2] 的零张量
         inputs_graph_bc = torch.zeros((batch_size, seq_length_1, seq_length_2))
 
         for batch_idx in range(batch_size):
             for i in range(seq_length_1):
                 for j in range(seq_length_2):
-                    # 检查 input_ids_1 和 input_ids_2 是否为 user_ids 或 item_ids
                     is_i_user_or_item = (input_ids_1[batch_idx, i] >= self.vocab_size)
                     is_j_user_or_item = (input_ids_2[batch_idx, j] >= self.vocab_size)
 
                     if is_i_user_or_item and is_j_user_or_item:
-                        # 计算 mapping_graph_bc 中的索引
                         adjusted_i = input_ids_1[batch_idx, i] - self.vocab_size
                         adjusted_j = input_ids_2[batch_idx, j] - self.vocab_size
                         inputs_graph_bc[batch_idx, i, j] = mapping_graph_bc[adjusted_i, adjusted_j]
 
         return inputs_graph_bc
 
+    # This is called by Dataloader, for the encoded and padded prompt IDs, main IDs, and attention masks
     def collate_fn(self, batch):
         """
         Custom collate function to encode and pad the batch of texts.
@@ -85,10 +90,7 @@ class CollaborativeGPTGeneratorBatch(Dataset):
                 Tuple containing the encoded and padded prompt IDs,
                 main IDs, and attention masks.
         """
-        # prompt_texts, item_ids = zip(*[b[:2] for b in batch])
         prompt_texts, item_ids = zip(*batch)
-        # graph_bc = self.mapping_graph_bc
-        # graph_bc = torch.tensor(graph_bc)
 
         # Encode and pad the prompt and main texts
         encoded_prompt = self.tokenizer.encode_batch(prompt_texts)
@@ -108,22 +110,22 @@ class CollaborativeGPTGeneratorBatch(Dataset):
             attention_mask = attention_mask[:, :-excess_length]
 
         graph_bc_prompt = self.get_bc_from_mapping(prompt_ids, prompt_ids, self.mapping_graph_bc)
-        # total_length = prompt_ids.size(1) + main_ids.size(1)
         combined_ids = torch.cat((prompt_ids, main_ids), dim=1)
         graph_bc_combined = self.get_bc_from_mapping(main_ids, combined_ids, self.mapping_graph_bc)
 
-        # print('prompt_ids.size()', prompt_ids.size())
-        # print('main_ids.size()', main_ids.size())
-        # print('attention_mask.size()', attention_mask.size())
-        # print('graph_bc_prompt.size()', graph_bc_prompt.size())
-        # print('graph_bc_combined.size()', graph_bc_combined.size())
-
         return prompt_ids, main_ids, attention_mask, graph_bc_prompt, graph_bc_combined
 
-
+# Used in: Training, Finetuning
+# Contains: 
+# 1. User's review to items, you can find the processed reviews under dataset/luxury/user_item_texts
+# 2. Each item's description, you can find them under dataset/luxury/user_item_texts
+# These are natural language based information, 
+# thus the LLM can understand the high level meaning of items & user interactions,
+# to assist better for the recommendation.
 class UserItemContentGPTDatasetBatch(Dataset):
     """
-    Dataset class for generating user-item content GPT input batches.
+    Dataset class for generating user-item 
+    content-based GPT model input batches.
 
     Args:
         tokenizer (TokenizerWithUserItemIDTokensBatch): 
@@ -155,36 +157,27 @@ class UserItemContentGPTDatasetBatch(Dataset):
     def get_bc_from_mapping(self, input_ids_1, input_ids_2, mapping_graph_bc):
         batch_size, seq_length_1 = input_ids_1.size()
         seq_length_2 = input_ids_2.size(1)
-        # print(batch_size, seq_length_1, seq_length_2)
 
-        # 创建一个大小为 [batch_size, seq_length_1, seq_length_2] 的零张量
         inputs_graph_bc = torch.zeros((batch_size, seq_length_1, seq_length_2))
 
         for batch_idx in range(batch_size):
             for i in range(seq_length_1):
                 for j in range(seq_length_2):
-                    # 检查 input_ids_1 和 input_ids_2 是否为 user_ids 或 item_ids
                     is_i_user_or_item = (input_ids_1[batch_idx, i] >= self.vocab_size)
                     is_j_user_or_item = (input_ids_2[batch_idx, j] >= self.vocab_size)
 
                     if is_i_user_or_item and is_j_user_or_item:
-                        # 计算 mapping_graph_bc 中的索引
                         adjusted_i = input_ids_1[batch_idx, i] - self.vocab_size
                         adjusted_j = input_ids_2[batch_idx, j] - self.vocab_size
-                        # print("adjusted_i:", adjusted_i)
-                        # print("adjusted_j:", adjusted_j)
-                        # print("mapping_graph_bc element:", mapping_graph_bc[adjusted_i, adjusted_j])
                         inputs_graph_bc[batch_idx, i, j] = mapping_graph_bc[adjusted_i, adjusted_j]
 
         return inputs_graph_bc
 
     def __getitem__(self, idx):
+
         # Get the prompt and main texts
         prompt_text, main_text = self.data[idx][0], self.data[idx][1]
-        # print('prompt_text.size()', len(prompt_text))
-        # print('prompt_text.size()', len(prompt_text[0]))
-        # print('prompt_text.size()', prompt_text[0])
-        # print('main_text.size()', len(main_text))
+
         return prompt_text, main_text
 
     def collate_fn(self, batch):
@@ -201,8 +194,6 @@ class UserItemContentGPTDatasetBatch(Dataset):
                 main IDs, and attention masks.
         """
         prompt_texts, main_texts = zip(*batch)
-        # graph_bc = self.mapping_graph_bc
-        # graph_bc = torch.tensor(graph_bc)
 
         # Encode and pad the prompt and main texts
         encoded_prompt = self.tokenizer.encode_batch(prompt_texts)
@@ -211,41 +202,31 @@ class UserItemContentGPTDatasetBatch(Dataset):
         # Get the prompt IDs, main IDs, and attention masks
         prompt_ids = torch.tensor(encoded_prompt[0])
         main_ids = torch.tensor(encoded_main[0])
+        
         # check the length
         prompt_attention_mask = torch.tensor(encoded_prompt[1])
         if prompt_ids.size(1) > self.max_length:
-            # print('first prompt_ids', prompt_ids.size())
-            # print('first prompt_attention_mask', prompt_attention_mask.size())
             prompt_ids = prompt_ids[:, :(self.max_length - 8)]
             prompt_attention_mask = prompt_attention_mask[:, :(self.max_length - 8)]
-            # print('after prompt_ids', prompt_ids.size())
-            # print('after prompt_attention_mask', prompt_attention_mask.size())
+        
         attention_mask = torch.cat((prompt_attention_mask, torch.tensor(encoded_main[1])), dim=1)
 
         # Truncate main IDs and attention mask if total length exceeds the maximum length
-
         total_length = prompt_ids.size(1) + main_ids.size(1)
         if total_length > self.max_length:
             excess_length = total_length - self.max_length
             main_ids = main_ids[:, :-excess_length]
             attention_mask = attention_mask[:, :-excess_length]
 
-        # print('prompt_ids',prompt_ids)
         graph_bc_prompt = self.get_bc_from_mapping(prompt_ids, prompt_ids, self.mapping_graph_bc)
-        # total_length = prompt_ids.size(1) + main_ids.size(1)
         combined_ids = torch.cat((prompt_ids, main_ids), dim=1)
-        # print('combined_ids',combined_ids)
         graph_bc_combined = self.get_bc_from_mapping(main_ids, combined_ids, self.mapping_graph_bc)
-
-        # print('prompt_ids.size()', prompt_ids.size())
-        # print('main_ids.size()', main_ids.size())
-        # print('attention_mask.size()', attention_mask.size())
-        # print('graph_bc_prompt.size()', graph_bc_prompt.size())
-        # print('graph_bc_combined.size()', graph_bc_combined.size())
 
         return prompt_ids, main_ids, attention_mask, graph_bc_prompt, graph_bc_combined
 
-
+# Used in: Finetuning
+# The prompt is changed to "<user_i> has interacted with <item_a> <item_b> ..., user_{idx} will interact with "
+# from here, we start to require the model to do prediction, and judging the correctness of the prediction.
 class RecommendationGPTTrainGeneratorBatch(Dataset):
     """
     Dataset class for generating recommendation GPT input batches.
@@ -309,25 +290,18 @@ class RecommendationGPTTrainGeneratorBatch(Dataset):
     def get_bc_from_mapping(self, input_ids_1, input_ids_2, mapping_graph_bc):
         batch_size, seq_length_1 = input_ids_1.size()
         seq_length_2 = input_ids_2.size(1)
-        # print(batch_size, seq_length_1, seq_length_2)
 
-        # 创建一个大小为 [batch_size, seq_length_1, seq_length_2] 的零张量
         inputs_graph_bc = torch.zeros((batch_size, seq_length_1, seq_length_2))
 
         for batch_idx in range(batch_size):
             for i in range(seq_length_1):
                 for j in range(seq_length_2):
-                    # 检查 input_ids_1 和 input_ids_2 是否为 user_ids 或 item_ids
                     is_i_user_or_item = (input_ids_1[batch_idx, i] >= self.vocab_size)
                     is_j_user_or_item = (input_ids_2[batch_idx, j] >= self.vocab_size)
 
                     if is_i_user_or_item and is_j_user_or_item:
-                        # 计算 mapping_graph_bc 中的索引
                         adjusted_i = input_ids_1[batch_idx, i] - self.vocab_size
                         adjusted_j = input_ids_2[batch_idx, j] - self.vocab_size
-                        # print("adjusted_i:", adjusted_i)
-                        # print("adjusted_j:", adjusted_j)
-                        # print("mapping_graph_bc element:", mapping_graph_bc[adjusted_i, adjusted_j])
                         inputs_graph_bc[batch_idx, i, j] = mapping_graph_bc[adjusted_i, adjusted_j]
 
         return inputs_graph_bc
@@ -346,8 +320,6 @@ class RecommendationGPTTrainGeneratorBatch(Dataset):
                 target matrix, and attention mask.
         """
         prompt_texts, target_matrices, item_ids = zip(*batch)
-        # graph_bc = self.mapping_graph_bc
-        # graph_bc = torch.tensor(graph_bc)
 
         # Encode and pad the prompt and main texts
         encoded_prompt = self.tokenizer.encode_batch(prompt_texts)
@@ -371,7 +343,8 @@ class RecommendationGPTTrainGeneratorBatch(Dataset):
 
         return prompt_ids, target_matrices, attention_mask, main_ids, graph_bc
 
-
+# Used in: Finetuning, Evaluation
+# This is for Test dataset, to judge the performance of model.
 class RecommendationGPTTestGeneratorBatch(Dataset):
     """
     Dataset class for generating recommendation GPT input batches.
@@ -435,25 +408,18 @@ class RecommendationGPTTestGeneratorBatch(Dataset):
     def get_bc_from_mapping(self, input_ids_1, input_ids_2, mapping_graph_bc):
         batch_size, seq_length_1 = input_ids_1.size()
         seq_length_2 = input_ids_2.size(1)
-        # print(batch_size, seq_length_1, seq_length_2)
 
-        # 创建一个大小为 [batch_size, seq_length_1, seq_length_2] 的零张量
         inputs_graph_bc = torch.zeros((batch_size, seq_length_1, seq_length_2))
 
         for batch_idx in range(batch_size):
             for i in range(seq_length_1):
                 for j in range(seq_length_2):
-                    # 检查 input_ids_1 和 input_ids_2 是否为 user_ids 或 item_ids
                     is_i_user_or_item = (input_ids_1[batch_idx, i] >= self.vocab_size)
                     is_j_user_or_item = (input_ids_2[batch_idx, j] >= self.vocab_size)
 
                     if is_i_user_or_item and is_j_user_or_item:
-                        # 计算 mapping_graph_bc 中的索引
                         adjusted_i = input_ids_1[batch_idx, i] - self.vocab_size
                         adjusted_j = input_ids_2[batch_idx, j] - self.vocab_size
-                        # print("adjusted_i:", adjusted_i)
-                        # print("adjusted_j:", adjusted_j)
-                        # print("mapping_graph_bc element:", mapping_graph_bc[adjusted_i, adjusted_j])
                         inputs_graph_bc[batch_idx, i, j] = mapping_graph_bc[adjusted_i, adjusted_j]
 
         return inputs_graph_bc
@@ -472,8 +438,6 @@ class RecommendationGPTTestGeneratorBatch(Dataset):
                 target matrix, and attention mask.
         """
         prompt_texts, train_matrices, target_matrices = zip(*batch)
-        # graph_bc = self.mapping_graph_bc
-        # graph_bc = torch.tensor(graph_bc)
 
         # Encode and pad the prompt and main texts
         encoded_prompt = self.tokenizer.encode_batch(prompt_texts)

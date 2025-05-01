@@ -76,7 +76,7 @@ provided_vocab_file = os.path.join(provided_tokenizer_path, "vocab_file.json")
 provided_merges_file = os.path.join(provided_tokenizer_path, "merges.txt")
 
 # The paths to save checkpoints, if you run by yourself
-self_running_model_save_dir = './checkpoints/self-running/finerune/'
+self_running_model_save_dir = './checkpoints/self-running/finetune/'
 content_based_model_save_path = os.path.join(self_running_model_save_dir, dataset, "content-based")
 collaborative_model_save_path = os.path.join(self_running_model_save_dir, dataset, "collaborative-based")
 if not os.path.exists(content_based_model_save_path):
@@ -377,7 +377,7 @@ def main():
             # Save user embeddings
             user_emb_path = os.path.join(collaborative_model_save_path, f"user_embeddings.pt")
             item_emb_path = os.path.join(collaborative_model_save_path, f"item_embeddings.pt")
-            gpt_save_path = os.path.join(content_based_model_save_path, f"collaborative_based_gpt2.bin")
+            gpt_save_path = os.path.join(collaborative_model_save_path, f"collaborative_based_gpt2.bin")
             torch.save(accelerator.unwrap_model(collaborate_model).base_model.user_embeddings.state_dict(), user_emb_path)
             torch.save(accelerator.unwrap_model(collaborate_model).base_model.item_embeddings.state_dict(), item_emb_path)
             torch.save(accelerator.unwrap_model(collaborate_model).base_model.gpt2model.state_dict(), gpt_save_path)
@@ -451,8 +451,11 @@ def main():
                 # Save user embeddings in the main process
                 user_emb_path = os.path.join(content_based_model_save_path, f"user_embeddings.pt")
                 item_emb_path = os.path.join(content_based_model_save_path, f"item_embeddings.pt")
+                gpt_save_path = os.path.join(content_based_model_save_path, f"content_based_gpt2.bin")
                 torch.save(accelerator.unwrap_model(content_model).base_model.user_embeddings.state_dict(), user_emb_path)
                 torch.save(accelerator.unwrap_model(content_model).base_model.item_embeddings.state_dict(), item_emb_path)
+                torch.save(accelerator.unwrap_model(content_model).base_model.gpt2model.state_dict(), gpt_save_path)
+
 
 if __name__ == "__main__":
     main()

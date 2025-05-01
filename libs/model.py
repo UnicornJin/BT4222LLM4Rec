@@ -5,6 +5,22 @@ import torch.nn.functional as F
 
 from modeling_gpt2 import GPT2Model, GPT2Config
 
+# ------------------------------------------------
+# This script is to show the data generator of 
+# BT4222 LLM for Recommendation Example Code
+#
+# This file contains the modified LLM model. 
+# The original LLM model needs to be slightly 
+# modified to serve the purpose of recommendation.
+#
+# This part is heavily LLM-related, NLP-related. 
+# It's okay if you feel confused about it. 
+# 
+# The script is based on project 
+# 'LLM4REC' https://github.com/anord-wang/LLM4REC
+#
+# Edition: 2025.05.01 by Jin Yuze
+# ------------------------------------------------
 
 class GPT4RecommendationBaseModel(nn.Module):
     '''
@@ -35,11 +51,8 @@ class GPT4RecommendationBaseModel(nn.Module):
     def embed(self, input_ids):
         # input_ids is a tensor of shape (batch_size, seq_length)
         vocab_mask = (input_ids < self.vocab_size).long()
-        #print('vocab_mask: ', vocab_mask)
         user_mask = ((input_ids >= self.vocab_size) & (input_ids < self.vocab_size + self.num_users)).long()
-        #print('user_mask: ', vocab_mask)
         item_mask = (input_ids >= self.vocab_size + self.num_users).long()
-        #print('item_mask: ', vocab_mask)
 
         # IDs outside of vocab range are set to 0
         vocab_ids = (input_ids * vocab_mask).clamp_(0, self.vocab_size - 1)

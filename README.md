@@ -11,9 +11,14 @@ The code is modified from project `LLM4REC`
 We strongly encourage you to take a look at their papers, for a rough understanding of the purpose of each stages.
 
 The system design is based on GPT2. There are three major scripts in this repo:
-- `llm4rec_training.py`
-- `llm4rec_finetuning.py`
-- `llm4rec_evaluation.py`
+- `llm4rec_training.py` The model learns the pattern of user/item interaction, 
+    item descriptions, and user reviews. This stage is called pre-training because 
+    we are just asking the model to get familiar with the scenario.
+
+- `llm4rec_finetuning.py` The model is required to make predictions in this stage,
+    And the correctness will be judged, and tune the model to make better predictions.
+
+- `llm4rec_evaluation.py` The evaluation step.
 
 And More detailed LLM-Related codes are under `libs\`, take a read if you are interested.
 
