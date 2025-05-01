@@ -61,7 +61,7 @@ Note: This will download `11GB` of data into the `gpt2/` folder. Make sure you h
 
 #### Prepare the dataset
 
-The pre-processed dataset is prepared in advance. You can download from:
+The pre-processed dataset is prepared in advance. You can download from: [Google Drive](https://drive.google.com/drive/folders/1FW7K87cfu2fERMa-vLOqM_feotexUDzB?usp=sharing)
 
 And then put them in current folder, e.g.: 
 ```
@@ -78,7 +78,7 @@ Meanwhile, we also provide the data pre-processing scripts, you can find them un
 
 #### Prepare the tokenizer
 
-We have prepared the pre-trained tokenizer for you, you can download from:
+We have prepared the pre-trained tokenizer for you, you can download from: [Google Drive](https://drive.google.com/drive/folders/1FW7K87cfu2fERMa-vLOqM_feotexUDzB?usp=sharing)
 
 And put them under:
 ```
@@ -90,7 +90,7 @@ BT4222LLM4REC:
 
 #### Prepare the checkpoints
 
-We have prepared the pre-training and fine-tuning checkpoints, you can download from:
+We have prepared the pre-training and fine-tuning checkpoints, you can download from: [Google Drive](https://drive.google.com/drive/folders/1FW7K87cfu2fERMa-vLOqM_feotexUDzB?usp=sharing)
 
 And put them under:
 ```
