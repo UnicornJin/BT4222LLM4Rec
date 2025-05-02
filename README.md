@@ -6,6 +6,7 @@ LLM for Recommendation System
 The code is modified from project `LLM4REC`
 
 [Code Repo](https://github.com/anord-wang/LLM4REC)
+
 [Paper](https://arxiv.org/abs/2402.09617)
 
 Meanwhile, for the research direction of "LLM for Recomm Sys", there a awesome summary for the papers, you can take a look if you are interested in this direction:
