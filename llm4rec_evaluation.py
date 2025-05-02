@@ -12,9 +12,9 @@ import torch
 from scipy.sparse import load_npz
 from torch.utils.data import DataLoader
 from transformers import GPT2Model, GPT2Config
-from transformers.models.gpt2 import GPT2ModelWithBC
 
 sys.path.append("libs")
+from libs.modeling_gpt2 import GPT2ModelWithBC
 from libs.tokenizer import TokenizerWithUserItemIDTokensBatch
 from libs.data import RecommendationGPTTestGeneratorBatch
 from libs.model import GPT4RecommendationBaseModel
@@ -45,9 +45,9 @@ test_matrix_path = os.path.join(data_root, "test_matrix.npz")
 pre_train_checkpoint = os.path.join('./checkpoints', 'pretrain', dataset)
 fine_tune_checkpoint = os.path.join('./checkpoints', 'finetune', dataset)
 
-bt4222_gpt2_finetune_weights_path = os.path.join(fine_tune_checkpoint, "collaborative-based", "collaborative_based_gpt2_best.bin")
-bt4222_gpt2_finetune_user_emb_path = os.path.join(fine_tune_checkpoint, "collaborative-based", "user_embeddings_best.pt")
-bt4222_gpt2_finetune_item_emb_path = os.path.join(fine_tune_checkpoint, "collaborative-based", "item_embeddings_best.pt")
+bt4222_gpt2_finetune_weights_path = os.path.join(fine_tune_checkpoint, "collaborative-based", "collaborative_based_gpt2.bin")
+bt4222_gpt2_finetune_user_emb_path = os.path.join(fine_tune_checkpoint, "collaborative-based", "user_embeddings.pt")
+bt4222_gpt2_finetune_item_emb_path = os.path.join(fine_tune_checkpoint, "collaborative-based", "item_embeddings.pt")
 
 # Need to use the author's provided tokenizer, instead of the original one
 provided_tokenizer_path = './provided_tokenizer'
@@ -157,6 +157,7 @@ def main():
     cur_recall_40 = 0
     cur_NDCG_100 = 0
 
+    print("-----Running the model-----")
     with torch.no_grad():
         for input_ids, train_mat, target_mat, attention_mask, graph_bc in test_data_loader:
 
@@ -193,10 +194,10 @@ def main():
 
     results_path = os.path.join(results_save_path, f"results.txt")
     with fsspec.open(results_path, "w") as f:
-        f.write(f"Final Testing Results:")
-        f.write(f"Recall@20: {cur_recall_20:.4f}")
-        f.write(f"Recall@40: {cur_recall_40:.4f}")
-        f.write(f"NDCG@100: {cur_NDCG_100:.4f}")
+        f.write(f"Final Testing Results:\n")
+        f.write(f"Recall@20: {cur_recall_20:.4f}\n")
+        f.write(f"Recall@40: {cur_recall_40:.4f}\n")
+        f.write(f"NDCG@100: {cur_NDCG_100:.4f}\n")
 
 if __name__ == "__main__":
     main()

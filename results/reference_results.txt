@@ -1,0 +1,4 @@
+Final Testing Results:
+Recall@20: 0.2840
+Recall@40: 0.3186
+NDCG@100: 0.2116
