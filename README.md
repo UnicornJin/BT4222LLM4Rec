@@ -9,11 +9,9 @@ The code is modified from project `LLM4REC`
 
 [Paper](https://arxiv.org/abs/2402.09617)
 
-Meanwhile, for the research direction of "LLM for Recomm Sys", there a awesome summary for the papers, you can take a look if you are interested in this direction:
-
-[LLM4Rec Awesome Papers](https://github.com/WLiK/LLM4Rec-Awesome-Papers)
-
 We strongly encourage you to take a look at their papers, for a rough understanding of the purpose of each stages.
+
+(Meanwhile, for the research direction of "LLM for Recomm Sys", there a awesome summary for the papers, you can take a look if you are interested in this direction: [LLM4Rec Awesome Papers](https://github.com/WLiK/LLM4Rec-Awesome-Papers) )
 
 The system design is based on GPT2. There are three major scripts in this repo:
 - `llm4rec_training.py` The model learns the pattern of user/item interaction, 
