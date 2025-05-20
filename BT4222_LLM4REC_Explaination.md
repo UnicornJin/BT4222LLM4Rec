@@ -1,6 +1,6 @@
 # Rec4LLM: LLM-Based Recommendation System with Soft & Hard Prompting
 
-Edition: Jin Yuze 17 May 2025
+Edition: Jin Yuze 20 May 2025
 
 ## Overview and High-Level Goals
 
