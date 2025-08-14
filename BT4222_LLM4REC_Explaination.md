@@ -2,6 +2,8 @@
 
 Edition: Jin Yuze 20 May 2025
 
+TODO: Revise this document since the previously the understanding on the paper is not correct.  
+
 ## Overview and High-Level Goals
 
 Rec4LLM (based on the [CLLM4Rec](https://arxiv.org/abs/2311.01343) framework) is a large language model (LLM)-based recommendation system that tightly integrates traditional ID-based collaborative filtering with rich textual content understanding. 
