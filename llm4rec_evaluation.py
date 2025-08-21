@@ -21,11 +21,26 @@ from libs.model import GPT4RecommendationBaseModel
 from libs.model import CollaborativeGPTwithItemRecommendHead
 from libs.util import Recall_at_k, NDCG_at_k
 
-# +++++++++++++++++++++++++++++++++++++++
+# ------------------------------------------------
+# This script is to show the training process of 
+# BT4222 LLM for Recommendation Example Code
+# 
+# The script is based on project 
+# 'LLM4REC' https://github.com/anord-wang/LLM4REC
+#
+# Edition: 2025 Aug by Jin Yuze
+# ------------------------------------------------
+
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# Set Up the environment, data paths, and configurations +
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+# The Amazon Dataset we are using
 dataset = 'luxury'
 lambda_V = 1.0
 
 # Dataset Related file paths
+# These are the paths to our pre-processed dataset
 dataset_path = './dataset'
 data_root = os.path.join(dataset_path, dataset)
 meta_path = os.path.join(data_root, "meta.pkl")
@@ -41,15 +56,16 @@ review_path = os.path.join(data_root, "user_item_texts", "review.pkl")
 train_matrix_path = os.path.join(data_root, "train_matrix.npz")
 test_matrix_path = os.path.join(data_root, "test_matrix.npz")
 
-
+# The checkpoint main path
 pre_train_checkpoint = os.path.join('./checkpoints', 'pretrain', dataset)
 fine_tune_checkpoint = os.path.join('./checkpoints', 'finetune', dataset)
 
+# The paths to the finetuned model weights
 bt4222_gpt2_finetune_weights_path = os.path.join(fine_tune_checkpoint, "collaborative-based", "collaborative_based_gpt2.bin")
 bt4222_gpt2_finetune_user_emb_path = os.path.join(fine_tune_checkpoint, "collaborative-based", "user_embeddings.pt")
 bt4222_gpt2_finetune_item_emb_path = os.path.join(fine_tune_checkpoint, "collaborative-based", "item_embeddings.pt")
 
-# Need to use the author's provided tokenizer, instead of the original one
+# The author's provided tokenizer
 provided_tokenizer_path = './provided_tokenizer'
 provided_vocab_file = os.path.join(provided_tokenizer_path, "vocab_file.json")
 provided_merges_file = os.path.join(provided_tokenizer_path, "merges.txt")
@@ -59,9 +75,7 @@ self_running_result_save_dir = './results'
 results_save_path = os.path.join(self_running_result_save_dir, dataset)
 if not os.path.exists(results_save_path):
     os.makedirs(results_save_path, exist_ok=True)
-# +++++++++++++++++++++++++++++++++++++++
 
-# +++++++++++++++++++++++++++++++++++++++
 # configurations for the GPT2 model
 _config = {
     "activation_function": "gelu_new",
@@ -95,6 +109,10 @@ _config = {
     "vocab_size": 50257
 }
 # +++++++++++++++++++++++++++++++++++++++
+
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# The evaluation progress starts here
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 def main():
     print("-----Current Setting-----")

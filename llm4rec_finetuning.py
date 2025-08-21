@@ -36,14 +36,20 @@ from libs.util import Recall_at_k, NDCG_at_k
 #
 # Edition: 2025.05.01 by Jin Yuze
 # ------------------------------------------------
-    
+
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# Set Up the environment, data paths, and configurations +
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+# Environment Settings for CUDA's GPU
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
-# +++++++++++++++++++++++++++++++++++++++
+# The Amazon Dataset we are using
 dataset = 'luxury'
 lambda_V = 1.0
 
 # Dataset Related file paths
+# These are the paths to our pre-processed dataset
 dataset_path = './dataset'
 data_root = os.path.join(dataset_path, dataset)
 meta_path = os.path.join(data_root, "meta.pkl")
@@ -60,7 +66,9 @@ filepath_list = [os.path.join(data_root, "user_item_texts", "review.pkl"),
 train_mat_path = os.path.join(data_root, "train_matrix.npz")
 val_mat_path = os.path.join(data_root, "val_matrix.npz")
 
+# The checkpoint main path
 pre_train_checkpoint = os.path.join('./checkpoints', 'pretrain', dataset)
+# The paths to the pre-trained weights we provided
 bt4222_content_based_gpt2_pretrained_weights_path = os.path.join(pre_train_checkpoint, "content-based", "content_based_gpt2_best.bin")
 bt4222_content_based_gpt2_pretrained_user_emb_path = os.path.join(pre_train_checkpoint, "content-based", "user_embeddings_best.pt")
 bt4222_content_based_gpt2_pretrained_item_emb_path = os.path.join(pre_train_checkpoint, "content-based", "item_embeddings_best.pt")
@@ -68,24 +76,23 @@ bt4222_collaborative_based_gpt2_pretrained_weights_path = os.path.join(pre_train
 bt4222_collaborative_based_gpt2_pretrained_user_emb_path = os.path.join(pre_train_checkpoint, "collaborative-based", "user_embeddings_best.pt")
 bt4222_collaborative_based_gpt2_pretrained_item_emb_path = os.path.join(pre_train_checkpoint, "collaborative-based", "item_embeddings_best.pt")
 
+# The fine-tune checkpoint main path
 fine_tune_checkpoint = os.path.join('./checkpoints', 'finetune', dataset)
 
-# Need to use the author's provided tokenizer, instead of the original one
+# The author's provided tokenizer
 provided_tokenizer_path = './provided_tokenizer'
 provided_vocab_file = os.path.join(provided_tokenizer_path, "vocab_file.json")
 provided_merges_file = os.path.join(provided_tokenizer_path, "merges.txt")
 
 # The paths to save checkpoints, if you run by yourself
-self_running_model_save_dir = './checkpoints/self-running/finetune/'
+self_running_model_save_dir = os.path.join(pre_train_checkpoint, "self-running", "finetune")
 content_based_model_save_path = os.path.join(self_running_model_save_dir, dataset, "content-based")
 collaborative_model_save_path = os.path.join(self_running_model_save_dir, dataset, "collaborative-based")
 if not os.path.exists(content_based_model_save_path):
     os.makedirs(content_based_model_save_path, exist_ok=True)
 if not os.path.exists(collaborative_model_save_path):
     os.makedirs(collaborative_model_save_path, exist_ok=True)
-# +++++++++++++++++++++++++++++++++++++++
 
-# +++++++++++++++++++++++++++++++++++++++
 # configurations for the GPT2 model
 _config = {
     "activation_function": "gelu_new",
@@ -120,8 +127,15 @@ _config = {
 }
 # +++++++++++++++++++++++++++++++++++++++
 
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+# The fine-tune progress
+# ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 def main():
+
     # Define the accelerator
+    # the accelerator is used to handle the distributed training
+    # but for this example, we actually just using single GPU.
     accelerator = Accelerator()
     # accelerator = Accelerator(mixed_precision="bf16")
     device = accelerator.device
@@ -144,10 +158,9 @@ def main():
     accelerator.print(f"Loading pretrained tokenizer from {provided_tokenizer_path}...")
     tokenizer = TokenizerWithUserItemIDTokensBatch(provided_vocab_file, provided_merges_file, num_users, num_items)
     
-    mapping_graph_bc = load_npz(mapping_graph_bc_path)
-
     # Load data content-based data
     accelerator.print("-----Loading Review Data (Content-based Data)-----")
+    mapping_graph_bc = load_npz(mapping_graph_bc_path)
     content_data_gen = UserItemContentGPTDatasetBatch(tokenizer, filepath_list, mapping_graph_bc)
 
     # Load the training&validation data generator
@@ -157,7 +170,7 @@ def main():
     collaborative_train_data_gen = RecommendationGPTTrainGeneratorBatch(tokenizer, train_mat, mapping_graph_bc)
     collaborative_val_data_gen = RecommendationGPTTestGeneratorBatch(tokenizer, train_mat, val_mat, mapping_graph_bc)
     
-    # The config of the original GPT model needs to be extended, for fitting the tasks
+    # The config of the original GPT model needs a bit edition
     # The changing is simple, just add two attributes: num_users, num_items
     accelerator.print("-----Begin Setting Up the Config-----")
     config = GPT2Config(**_config)
@@ -182,6 +195,7 @@ def main():
     base_model.item_embeddings.load_state_dict(torch.load(bt4222_collaborative_based_gpt2_pretrained_item_emb_path, map_location=device))
     collaborate_model = CollaborativeGPTwithItemRecommendHead(config, base_model)
 
+    # [Optional]
     # Freeze the parameters of the pretrained GPT2 for content model
     # for name, param in collaborate_model.named_parameters():
     #     # we allow only user/item token embeddings to be trained
@@ -214,7 +228,7 @@ def main():
     accelerator.print("num_fine_tuning_epochs: ", num_fine_tuning_epochs)
 
     # Create a data sampler for distributed training
-    num_workers = 1
+    num_workers = 1 # We are using single GPU
     collaborative_based_train_data_loader = DataLoader(collaborative_train_data_gen, 
                                    batch_size=batch_size_collaborative_based_training,
                                    collate_fn=collaborative_train_data_gen.collate_fn,
@@ -257,6 +271,8 @@ def main():
     accelerator.print(f"Content-based model: Weights will be saved to {content_based_model_save_path}")
     accelerator.print(f"Collaborative-based model: Weights will be saved to {collaborative_model_save_path}")
 
+    # Finished doing the setup
+
     # ----------------------------------------------------------------
     # The fine tuning loop begins from here    
     # ----------------------------------------------------------------
@@ -285,7 +301,7 @@ def main():
             with torch.no_grad():
                 content_embeds = torch.cat(
                     (accelerator.unwrap_model(content_model).base_model.embed(input_ids),
-                     accelerator.unwrap_model(content_model).base_model.embed(input_ids_main)),
+                    accelerator.unwrap_model(content_model).base_model.embed(input_ids_main)),
                     axis=1
                 ).to(device)
 
@@ -340,9 +356,9 @@ def main():
 
                 # Get item scores and rank them
                 rec_loss, item_scores = collaborate_model(input_ids,
-                                                  target_mat,
-                                                  mapping_graph_bc=graph_bc,
-                                                  attention_mask=attention_mask)
+                                                target_mat,
+                                                mapping_graph_bc=graph_bc,
+                                                attention_mask=attention_mask)
                 
                 # Set score of interacted items to the lowest
                 item_scores[train_mat > 0] = -float("inf")  
@@ -394,7 +410,7 @@ def main():
             regularize_total_loss = 0
 
             progress_bar = tqdm(content_based_data_loader, desc=f"Epoch {epoch + 1}",
-                               disable=not accelerator.is_local_main_process, ncols=100)
+                            disable=not accelerator.is_local_main_process, ncols=100)
             
             for input_ids_prompt, input_ids_main, attention_mask, graph_bc_prompt, graph_bc_combined in progress_bar:
                 content_based_optimizer.zero_grad()
@@ -408,7 +424,7 @@ def main():
                 accelerator.wait_for_everyone()
                 with torch.no_grad():
                     rec_embeds = accelerator.unwrap_model(collaborate_model).\
-                                 base_model.embed(input_ids_prompt).to(device)
+                                base_model.embed(input_ids_prompt).to(device)
 
                 # Forward pass of the content GPT
                 outputs = content_model(input_ids_prompt,
@@ -430,7 +446,7 @@ def main():
                 review_total_loss += review_loss.item()
                 regularize_total_loss += regularize_loss.item()
                 progress_bar.set_postfix({"Review Loss": review_loss.item(),
-                                          "Regularize Loss": regularize_loss.item()})
+                                        "Regularize Loss": regularize_loss.item()})
 
             # Gather the content LM loss from different device
             thread_review_average_loss = torch.tensor([review_total_loss / len(content_based_data_loader)]).to(device)
