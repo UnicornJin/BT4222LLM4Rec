@@ -2,9 +2,7 @@
 
 This repo contains the code for NUS BT4222 module topic: LLM for Recommendation System
 
-The code is modified from project `LLM4REC` ([Code Repo](https://github.com/anord-wang/LLM4REC), [Paper](https://arxiv.org/abs/2402.09617) )
-
-For a more detailed understanding of the topic, you can take a look at their paper. 
+The code is modified from project `LLM4REC` ([Code Repo](https://github.com/anord-wang/LLM4REC), [Paper](https://arxiv.org/abs/2402.09617)) For a more detailed understanding of the topic, you can take a look at their paper. 
 
 (Meanwhile, for the research direction of "LLM for Recomm Sys", there a awesome summary for the papers, you can take a look if you are interested in this direction: [LLM4Rec Awesome Papers](https://github.com/WLiK/LLM4Rec-Awesome-Papers) )
 
@@ -34,25 +32,29 @@ Make sure you have `conda` installed.
 
 Run these steps to create a conda-env to run our code:
 ```
-conda create -n bt4222llm4rec pip
+conda create -n bt4222llm4rec python=3.11 pip -y
 conda activate bt4222llm4rec
 pip install -r requirements.txt
 ```
 
 #### Prepare GPT2 repo
-To download the large files from HuggingFace, Git LFS is required.
-Make sure you have Git LFS installed, if not, you can install with:
+The GPT2 model weights are hosted on HuggingFace. This year (2025), HuggingFace is transferring the large file downloading from `git-lfs` to `huggingface-cli`.
+
+To download the GPT2 weights, first, make sure you have `huggingface-cli` installed:
 ```
-conda install -c conda-forge git-lfs
-git lfs install
+# 1) Install tools
+pip install -U "huggingface_hub[cli]" hf_transfer
+
+# 2) (Optional but faster) enable accelerated transfers
+export HF_HUB_ENABLE_HF_TRANSFER=1
 ```
 
-Then pull GPT2 repo & weights from HuggingFace (https://huggingface.co/openai-community/gpt2)
-
+Then you can download the GPT2 repo. (Since GPT2 is public, you suppose to be able to download without login.)
+Since the downloading is large, you may want to run it in `screen` or `tmux` session.
 ```
-git clone https://huggingface.co/openai-community/gpt2
-cd gpt2
-git lfs pull
+# 3) Download the GPT-2 model repo into ./gpt2  (resumeable, versioned cache)
+huggingface-cli download openai-community/gpt2 \
+  --local-dir ./gpt2 --repo-type model
 ```
 
 Note: This will download `11GB` of data into the `gpt2/` folder. Make sure you have stable network connection, and you may take a walk/break when waiting for downloading.
@@ -139,7 +141,7 @@ You may note this will run for long long time. (You can use `screen` command to 
 
 This step may produce `50GB` of intermediate data on disk, mainly the checkpoints in the middle of training. 
 
-You can find all the saved checkpoints from `checkpoints\self-running\pretrain`
+You can find all the saved checkpoints from `checkpoints\pretrain`
 
 Find a best model with smalled loss from the pretrain checkpoints, rename it to `xxxxxx_best.xxx`, as how the checkpoints are provided. 
 
