@@ -93,7 +93,9 @@ This training script orchestrates the two-stage pretraining: (1) content-based a
 
     By the end of this stage, `collaborative_model` has learned to model interaction sequences while staying aligned with the content model’s embedding space.
 
-Note: The pretraining procedure as implemented is **sequential**: first content, then collaborative.  
+Note-1: The pretraining procedure as implemented is **sequential**: first content, then collaborative.  
+
+Note-2: About "**C-Steps**": You may notice that in the code, there is a `C-steps`. When the collaborative-based model is being trained, for every `50` epochs, the content-based model is trained for one epoch, with the collaborative-based model's embedding layer loaded to content-based model for regularization. This is to ensure the content model does not become stale and continues to adapt slightly based on the collaborative model's learning. This is the reason why in the previous graph, the regularization arrow goes both ways. 
 
 #### Fine-Tuning (`llm4rec_finetuning.py`)
 This script takes the pretrained models and performs the final fine-tuning to directly optimize recommendation accuracy.
