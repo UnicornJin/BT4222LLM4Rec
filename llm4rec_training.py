@@ -282,11 +282,11 @@ def main():
     review_optimizer = optim.Adam(content_model.parameters(), lr=learning_rate)
     collaborative_optimizer = optim.Adam(collaborative_model.parameters(), lr=learning_rate)
 
-    # Parallel model, optimizer and data loader with accelerator
+    # model, optimizer and data loader with accelerator
     content_model, review_optimizer, review_data_loader = \
         accelerator.prepare(content_model, review_optimizer, review_data_loader)
 
-    # Parallel model, optimizer and data loader with accelerator
+    # model, optimizer and data loader with accelerator
     collaborative_model, collaborative_optimizer, collaborative_data_loader = \
         accelerator.prepare(collaborative_model, collaborative_optimizer, collaborative_data_loader)
 

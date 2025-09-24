@@ -16,7 +16,7 @@ The reason of this separation is that, the review data and interaction data are 
 
 Keeping them separate prevents the text signal and the interaction signal from fighting each other. Later, we align them so they agree. 
 
-**Overall procedure** is: In the pre-training stage, the two models are trained parallelly. And later in the fine-tuning stage, we train the recommendation model based on the collaborative model, while still using the content model for regularization.
+**Overall procedure** is: In the pre-training stage, the two models are trained separately. And later in the fine-tuning stage, we train the recommendation model based on the collaborative model, while still using the content model for regularization.
 
 
 #### Pretraining (`llm4rec_training.py`)

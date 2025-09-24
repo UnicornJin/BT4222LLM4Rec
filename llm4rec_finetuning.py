@@ -253,7 +253,7 @@ def main():
     collaborative_based_optimizer = optim.Adam(collaborate_model.parameters(), lr=learning_rate)
     content_based_optimizer = optim.Adam(content_model.parameters(), lr=learning_rate)
 
-    # Parallel model, optimizer and data loader with accelerator
+    # Model, optimizer and data loader with accelerator
     collaborate_model, collaborative_based_optimizer, collaborative_based_train_data_loader = \
         accelerator.prepare(collaborate_model, collaborative_based_optimizer, collaborative_based_train_data_loader)
     content_model, content_based_optimizer, content_based_data_loader = \
